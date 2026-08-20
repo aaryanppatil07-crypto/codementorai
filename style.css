@@ -1,0 +1,232 @@
+/* ============================================================
+   CodeMentor AI — AI code reviewer & complexity analyzer
+   Design: "terminal mentor" — near-black IDE canvas, neon green/
+   amber accents, monospace-forward, chat-style review feed
+   ============================================================ */
+
+:root{
+  --bg:#0a0c10;
+  --bg-2:#0d1016;
+  --panel:rgba(255,255,255,.04);
+  --panel-solid:#10141b;
+  --line:rgba(255,255,255,.09);
+  --text:#e7ecf3;
+  --muted:#818a9c;
+
+  --green:#4fe3a1;
+  --amber:#ffb454;
+  --pink:#ff6b8b;
+  --violet:#8f7bff;
+
+  --font-display:"Sora", system-ui, sans-serif;
+  --font-body:"Inter", system-ui, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, monospace;
+
+  --radius:18px;
+  --radius-sm:11px;
+}
+
+html[data-theme="light"]{
+  --bg:#f2f3f7;
+  --bg-2:#eaecf3;
+  --panel:rgba(255,255,255,.7);
+  --panel-solid:#ffffff;
+  --line:rgba(15,20,35,.1);
+  --text:#141722;
+  --muted:#5c6274;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;
+  background:radial-gradient(1100px 500px at 50% -10%, var(--bg-2), var(--bg) 65%);
+  color:var(--text);font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .3s ease,color .3s ease;
+}
+h1,h2,h3{font-family:var(--font-display);margin:0}
+p{margin:0}
+button,input,select,textarea{font-family:inherit}
+
+.scan-glow{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(500px 320px at 12% 0%, rgba(79,227,161,.12), transparent 70%),
+    radial-gradient(420px 320px at 92% 15%, rgba(143,123,255,.12), transparent 70%);
+}
+
+.shell{position:relative;z-index:1;max-width:1360px;margin:0 auto;padding:20px 26px 40px;min-height:100vh;display:flex;flex-direction:column;gap:18px}
+
+/* ---------- topbar ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  padding:14px 20px;border-radius:16px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(14px);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{
+  font-family:var(--font-mono);font-weight:700;font-size:13px;
+  width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#04140d;
+  background:linear-gradient(135deg,var(--green),var(--violet));
+}
+.brand-name{font-family:var(--font-display);font-weight:700;font-size:18px}
+.brand-name em{font-style:normal;color:var(--green)}
+.ai-tag{
+  margin-left:8px;font-family:var(--font-mono);font-size:10.5px;padding:3px 8px;border-radius:6px;
+  background:rgba(143,123,255,.16);color:var(--violet);vertical-align:middle;letter-spacing:.05em;
+}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.pill-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:10px;
+  background:var(--panel-solid);border:1px solid var(--line);color:var(--text);
+  font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;
+}
+.pill-btn:hover{border-color:var(--green)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--pink)}
+.status-dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(79,227,161,.18)}
+.icon-toggle{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel-solid);
+  color:var(--text);display:grid;place-items:center;cursor:pointer;
+}
+.icon-toggle:hover{border-color:var(--green)}
+
+/* ---------- main grid ---------- */
+.main-grid{flex:1;display:grid;grid-template-columns:1.15fr .85fr;gap:18px;min-height:0}
+
+/* ---------- editor pane ---------- */
+.editor-pane{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  backdrop-filter:blur(14px);display:flex;flex-direction:column;overflow:hidden;min-height:520px;
+}
+.pane-head{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+}
+.pane-head > span{font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:.03em}
+.lang-select{
+  background:var(--panel-solid);border:1px solid var(--line);color:var(--text);
+  padding:7px 12px;border-radius:9px;font-family:var(--font-mono);font-size:12.5px;outline:none;cursor:pointer;
+}
+.lang-select:focus{border-color:var(--green)}
+.pane-head-actions{display:flex;gap:8px}
+.mini-btn{
+  background:var(--panel-solid);border:1px solid var(--line);color:var(--muted);
+  padding:6px 12px;border-radius:9px;font-size:11.5px;cursor:pointer;
+}
+.mini-btn:hover{color:var(--text);border-color:var(--green)}
+
+.editor-wrap{flex:1;display:flex;min-height:0;position:relative}
+.gutter{
+  width:44px;flex-shrink:0;padding:16px 0;text-align:right;padding-right:10px;
+  font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--muted);
+  background:rgba(255,255,255,.015);border-right:1px solid var(--line);
+  white-space:pre;overflow:hidden;user-select:none;
+}
+.code-input{
+  flex:1;resize:none;border:0;background:transparent;color:var(--text);
+  padding:16px 18px;font-family:var(--font-mono);font-size:13.5px;line-height:1.6;outline:none;
+}
+.editor-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
+.line-count{font-family:var(--font-mono);font-size:11.5px;color:var(--muted)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  padding:10px 18px;border-radius:11px;font-weight:600;font-size:13.5px;
+  border:1px solid transparent;cursor:pointer;transition:.15s ease;
+}
+.btn-lg{padding:11px 20px}
+.btn-solid{background:linear-gradient(90deg,var(--green),var(--violet));color:#04140d}
+.btn-solid:hover{filter:brightness(1.08)}
+.btn-solid:disabled{opacity:.6;cursor:progress}
+.btn-outline{border-color:var(--line);color:var(--text);background:transparent}
+.btn-outline:hover{border-color:var(--pink);color:var(--pink)}
+.spark{opacity:.85}
+
+/* ---------- chat / review pane ---------- */
+.chat-pane{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  backdrop-filter:blur(14px);display:flex;flex-direction:column;overflow:hidden;min-height:520px;
+}
+.complexity-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.complexity-card{
+  background:var(--panel-solid);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;display:flex;flex-direction:column;gap:4px;
+}
+.cx-label{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.cx-val{font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--green)}
+
+.chat-feed{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.msg{max-width:100%}
+.msg-tag{display:block;font-family:var(--font-mono);font-size:10.5px;color:var(--muted);margin-bottom:5px;letter-spacing:.04em}
+.msg p{font-size:13.5px;line-height:1.55;padding:10px 13px;border-radius:11px;background:var(--panel-solid);border:1px solid var(--line)}
+.msg.user{align-self:flex-end;max-width:88%}
+.msg.user p{background:linear-gradient(135deg,rgba(79,227,161,.12),rgba(143,123,255,.12));border-color:rgba(79,227,161,.3)}
+.msg.user .msg-tag{text-align:right}
+.msg em{color:var(--green);font-style:normal}
+
+.issue-card{
+  border-radius:11px;border:1px solid var(--line);background:var(--panel-solid);
+  padding:11px 13px;margin-bottom:8px;
+}
+.issue-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sev-tag{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700;letter-spacing:.03em}
+.sev-bug{background:rgba(255,107,139,.16);color:var(--pink)}
+.sev-warning{background:rgba(255,180,84,.16);color:var(--amber)}
+.sev-style{background:rgba(143,123,255,.16);color:var(--violet)}
+.sev-suggestion{background:rgba(79,227,161,.16);color:var(--green)}
+.issue-line{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.issue-msg{font-size:13px;line-height:1.5;margin-bottom:4px}
+.issue-fix{font-size:12.5px;color:var(--muted);line-height:1.5}
+.issue-fix strong{color:var(--text)}
+
+.ask-form{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+#askInput{
+  flex:1;background:var(--panel-solid);border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;color:var(--text);font-size:13px;outline:none;
+}
+#askInput:focus{border-color:var(--green)}
+.btn-send{
+  width:38px;height:38px;border-radius:10px;border:0;flex-shrink:0;cursor:pointer;
+  background:linear-gradient(135deg,var(--green),var(--violet));color:#04140d;display:grid;place-items:center;
+}
+
+/* ---------- footer ---------- */
+.footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:14px 4px 4px;font-size:12.5px;color:var(--muted)}
+.footer-credit strong{color:var(--green);font-weight:700}
+
+/* ---------- modal ---------- */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(3,4,8,.62);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+}
+.modal-backdrop.open{display:flex}
+.modal{width:100%;max-width:440px;background:var(--panel-solid);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+.modal h3{font-size:18px;margin-bottom:10px}
+.modal-copy{color:var(--muted);font-size:13.5px;line-height:1.6;margin-bottom:16px}
+#apiKeyInput{
+  width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
+  background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;
+}
+#apiKeyInput:focus{border-color:var(--green)}
+.modal-hint{font-size:12.5px;color:var(--muted);margin-top:10px}
+.modal-hint a{color:var(--green)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+
+/* ---------- typing indicator ---------- */
+.typing{display:flex;gap:5px;align-items:center;padding:4px 0}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--green);animation:bounce 1.1s infinite ease-in-out}
+.typing span:nth-child(2){animation-delay:.15s;background:var(--violet)}
+.typing span:nth-child(3){animation-delay:.3s;background:var(--pink)}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+
+/* ---------- responsive ---------- */
+@media (max-width:1060px){
+  .main-grid{grid-template-columns:1fr}
+  .editor-pane,.chat-pane{min-height:420px}
+}
+@media (max-width:620px){
+  .shell{padding:16px}
+  .complexity-row{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important}
+}

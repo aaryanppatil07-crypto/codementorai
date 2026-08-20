@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CodeMentor AI — AI Code Reviewer &amp; Complexity Analyzer</title>
+<meta name="description" content="CodeMentor AI reviews your code, explains bugs, suggests fixes, and estimates time/space complexity — with a chat-style AI mentor.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="scan-glow" aria-hidden="true"></div>
+
+<div class="shell">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">&lt;/&gt;</span>
+      <span class="brand-name">Code<em>Mentor</em><span class="ai-tag">AI</span></span>
+    </div>
+    <div class="topbar-actions">
+      <button id="apiKeyBtn" class="pill-btn"><span id="apiKeyStatus" class="status-dot off"></span> AI key</button>
+      <button id="themeToggle" class="icon-toggle" aria-label="Toggle theme">
+        <svg id="themeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3v1.5M12 19.5V21M21 12h-1.5M4.5 12H3M18.4 5.6l-1.06 1.06M6.66 17.34l-1.06 1.06M18.4 18.4l-1.06-1.06M6.66 6.66 5.6 5.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
+      <a href="https://github.com/" target="_blank" rel="noopener" id="repoLink" class="pill-btn">Source ↗</a>
+    </div>
+  </header>
+
+  <main class="main-grid">
+
+    <!-- LEFT: code editor -->
+    <section class="editor-pane">
+      <div class="pane-head">
+        <div class="lang-select-wrap">
+          <select id="langSelect" class="lang-select">
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+            <option value="other">Other / generic</option>
+          </select>
+        </div>
+        <div class="pane-head-actions">
+          <button id="loadSampleBtn" class="mini-btn" type="button">Load sample</button>
+          <button id="clearBtn" class="mini-btn" type="button">Clear</button>
+        </div>
+      </div>
+      <div class="editor-wrap">
+        <div class="gutter" id="gutter">1</div>
+        <textarea id="codeInput" class="code-input" spellcheck="false" placeholder="Paste your code here…"></textarea>
+      </div>
+      <div class="editor-foot">
+        <span class="line-count" id="lineCount">1 line</span>
+        <button id="analyzeBtn" class="btn btn-solid btn-lg">
+          <span id="analyzeLabel">Analyze code</span>
+          <span class="spark">✦</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RIGHT: chat + results -->
+    <aside class="chat-pane">
+      <div class="pane-head">
+        <span>Mentor review</span>
+        <button id="copyBtn" class="mini-btn" type="button">Copy summary</button>
+      </div>
+
+      <div class="complexity-row" id="complexityRow">
+        <div class="complexity-card">
+          <span class="cx-label">Time</span>
+          <span class="cx-val" id="timeVal">—</span>
+        </div>
+        <div class="complexity-card">
+          <span class="cx-label">Space</span>
+          <span class="cx-val" id="spaceVal">—</span>
+        </div>
+        <div class="complexity-card">
+          <span class="cx-label">Issues found</span>
+          <span class="cx-val" id="issueCount">—</span>
+        </div>
+      </div>
+
+      <div class="chat-feed" id="chatFeed">
+        <div class="msg bot">
+          <span class="msg-tag">CodeMentor</span>
+          <p>Paste some code on the left and hit <em>Analyze code</em> — I'll review it for bugs, style issues, and estimate its time/space complexity, right here in chat.</p>
+        </div>
+      </div>
+
+      <form id="askForm" class="ask-form" autocomplete="off">
+        <input id="askInput" type="text" placeholder="Ask a follow-up, e.g. 'why is this O(n²)?'" />
+        <button type="submit" class="btn-send" aria-label="Send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M14 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </form>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span class="footer-credit">Designed by <strong>Bhumika</strong></span>
+  </footer>
+</div>
+
+<!-- API KEY MODAL -->
+<div class="modal-backdrop" id="apiModalBackdrop">
+  <div class="modal">
+    <h3>Connect your Gemini API key</h3>
+    <p class="modal-copy">CodeMentor AI works immediately using a built-in local static analyzer — no key needed. Add a free Gemini key to get deeper, more accurate AI-driven reviews and follow-up chat. The key is stored only in this browser and sent only to Google's API.</p>
+    <input type="password" id="apiKeyInput" placeholder="Paste your Gemini API key" autocomplete="off">
+    <p class="modal-hint">Don't have one? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free key at Google AI Studio →</a></p>
+    <div class="modal-actions">
+      <button id="apiKeyClear" class="btn btn-outline" type="button">Remove key</button>
+      <button id="apiKeySave" class="btn btn-solid" type="button">Save key</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
